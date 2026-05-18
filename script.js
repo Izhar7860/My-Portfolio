@@ -1,3 +1,6 @@
+import { db } from './firebase-config.js';
+import { ref, push, set } from 'https://www.gstatic.com/firebasejs/10.13.1/firebase-database.js';
+
 // Theme Toggle
 const themeToggle = document.getElementById('theme-toggle');
 const body = document.body;
@@ -26,7 +29,7 @@ if (savedTheme === 'light') {
 // Typing Animation
 const typingText = document.getElementById('typing-text');
 const texts = [
-    'Hi, I\\'m Khan Izharul Haq',
+    "Hi, I'm Khan Izharul Haq",
     'Full Stack Web Developer',
     'UI/UX Designer',
     'Creative Problem Solver'
@@ -122,18 +125,7 @@ const skillsObserver = new IntersectionObserver((entries) => {
 
 skillBars.forEach(bar => skillsObserver.observe(bar));
 
-// Firebase Backend Contact Form
-let db;
-(async () => {
-    try {
-        const { db: firestoreDb, collection, addDoc } = await import('./firebase-config.js');
-        db = firestoreDb;
-        console.log('✅ Firebase Firestore ready for contact form');
-    } catch (e) {
-        console.log('ℹ️ Firebase config needed - form works with fallback');
-    }
-})();
-
+// Firebase Backend Contact Form using Realtime Database
 const contactForm = document.getElementById('contact-form');
 contactForm.addEventListener('submit', async (e) => {
     e.preventDefault();
@@ -144,22 +136,20 @@ contactForm.addEventListener('submit', async (e) => {
     
     if (name && email && message) {
         try {
-            if (db) {
-                await addDoc(collection(db, 'contacts'), {
-                    name,
-                    email, 
-                    message,
-                    timestamp: new Date(),
-                    submittedFrom: 'portfolio website'
-                });
-                alert('✅ Thank you! Message saved to Firebase database');
-            } else {
-                alert('Thank you for your message! (Firebase setup pending)');
-            }
+            const contactsRef = ref(db, 'contacts');
+            const newContactRef = push(contactsRef);
+            await set(newContactRef, {
+                name,
+                email,
+                message,
+                timestamp: Date.now(),
+                submittedFrom: 'portfolio website'
+            });
+            alert('Thank you! Message saved to Firebase Realtime Database');
             contactForm.reset();
         } catch (error) {
             console.error('Submit error:', error);
-            alert('Thank you! Message received locally');
+            alert('Oops! There was a problem sending your message. Please try again later.');
         }
     } else {
         alert('Please fill all fields');
@@ -389,8 +379,3 @@ window.addEventListener('load', () => {
     initProfileGlobe();
     initProjectTilt();
 });
-</xai:function_call > 
-
-<xai:function_call name="edit_file">
-<parameter name="path">d:/portfolio/TODO.md
-
