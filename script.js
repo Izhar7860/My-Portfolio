@@ -1,6 +1,3 @@
-import { db } from './firebase-config.js';
-import { ref, push, set } from 'https://www.gstatic.com/firebasejs/10.13.1/firebase-database.js';
-
 // Theme Toggle
 const themeToggle = document.getElementById('theme-toggle');
 const body = document.body;
@@ -125,34 +122,56 @@ const skillsObserver = new IntersectionObserver((entries) => {
 
 skillBars.forEach(bar => skillsObserver.observe(bar));
 
-// Firebase Backend Contact Form using Realtime Database
+// Web3Form Contact Form Handler
 const contactForm = document.getElementById('contact-form');
+const resultDiv = document.getElementById('result');
+
 contactForm.addEventListener('submit', async (e) => {
     e.preventDefault();
     
-    const name = document.getElementById('name').value.trim();
-    const email = document.getElementById('email').value.trim();
-    const message = document.getElementById('message').value.trim();
+    const submitBtn = contactForm.querySelector('button[type="submit"]');
+    const originalText = submitBtn.textContent;
+    submitBtn.textContent = 'Sending...';
+    submitBtn.disabled = true;
+    resultDiv.style.display = 'none';
     
-    if (name && email && message) {
-        try {
-            const contactsRef = ref(db, 'contacts');
-            const newContactRef = push(contactsRef);
-            await set(newContactRef, {
-                name,
-                email,
-                message,
-                timestamp: Date.now(),
-                submittedFrom: 'portfolio website'
-            });
-            alert('Thank you! Message saved to Firebase Realtime Database');
+    try {
+        const formData = new FormData(contactForm);
+        const response = await fetch('https://api.web3forms.com/submit', {
+            method: 'POST',
+            body: formData
+        });
+        
+        const data = await response.json();
+        
+        if (data.success) {
+            resultDiv.textContent = '✅ Thank you! Your message has been sent successfully. I\'ll get back to you soon!';
+            resultDiv.style.backgroundColor = '#d4edda';
+            resultDiv.style.color = '#155724';
+            resultDiv.style.borderLeft = '4px solid #28a745';
+            resultDiv.style.display = 'block';
             contactForm.reset();
-        } catch (error) {
-            console.error('Submit error:', error);
-            alert('Oops! There was a problem sending your message. Please try again later.');
+            // Clear result message after 5 seconds
+            setTimeout(() => {
+                resultDiv.style.display = 'none';
+            }, 5000);
+        } else {
+            resultDiv.textContent = '❌ Oops! There was a problem sending your message. Please try again later.';
+            resultDiv.style.backgroundColor = '#f8d7da';
+            resultDiv.style.color = '#721c24';
+            resultDiv.style.borderLeft = '4px solid #f5c6cb';
+            resultDiv.style.display = 'block';
         }
-    } else {
-        alert('Please fill all fields');
+    } catch (error) {
+        console.error('Submit error:', error);
+        resultDiv.textContent = '❌ Error: ' + error.message;
+        resultDiv.style.backgroundColor = '#f8d7da';
+        resultDiv.style.color = '#721c24';
+        resultDiv.style.borderLeft = '4px solid #f5c6cb';
+        resultDiv.style.display = 'block';
+    } finally {
+        submitBtn.textContent = originalText;
+        submitBtn.disabled = false;
     }
 });
 
